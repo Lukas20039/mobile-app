@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Drop-in replacement for the abandoned gitawego/cordova-screenshot plugin.
+
+    It keeps the original JS contract - navigator.screenshot.save(cb, format, quality, filename)
+    with cb(error, {filePath}) - so www/js/factories/screenshotService.js needs no rewrite,
+    but captures via PixelCopy and stores via MediaStore so it works under scoped storage
+    (Android 10+) without WRITE_EXTERNAL_STORAGE.
+-->
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        id="cordova-plugin-grisu-screenshot"
+        version="1.0.0">
+
+    <name>Grisu Screenshot</name>
+    <description>Captures the current screen and stores it in the device gallery.</description>
+    <license>MIT</license>
+    <keywords>cordova,screenshot,android</keywords>
+
+    <engines>
+        <engine name="cordova-android" version=">=13.0.0"/>
+    </engines>
+
+    <js-module src="www/screenshot.js" name="Screenshot">
+        <clobbers target="navigator.screenshot"/>
+    </js-module>
+
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="GrisuScreenshot">
+                <param name="android-package" value="at.lex.grisu.noe.screenshot.GrisuScreenshot"/>
+            </feature>
+        </config-file>
+
+        <!--
+            Only needed on API <= 28. From API 29 on, MediaStore inserts require no
+            storage permission at all.
+        -->
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+                             android:maxSdkVersion="28"/>
+        </config-file>
+
+        <source-file src="src/android/GrisuScreenshot.java"
+                     target-dir="app/src/main/java/at/lex/grisu/noe/screenshot"/>
+    </platform>
+</plugin>

@@ -1,0 +1,16 @@
+{
+  "name": "cordova-plugin-grisu-screenshot",
+  "version": "1.0.0",
+  "description": "Captures the current screen and stores it in the device gallery (scoped-storage safe).",
+  "license": "MIT",
+  "cordova": {
+    "id": "cordova-plugin-grisu-screenshot",
+    "platforms": [
+      "android"
+    ]
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-android"
+  ]
+}
