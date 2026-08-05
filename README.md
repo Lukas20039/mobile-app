@@ -15,6 +15,22 @@ This project aims to build a modern mobile web-app based on the [Ionic framework
 of the existing solution. The new resulting mobile app should be available in several app stores for different mobile platforms to have a
 native look and feel.
 
+Documentation
+-------------
+
+| Document | Contents |
+|---|---|
+| **[ARCHITECTURE.md](ARCHITECTURE.md)** | How the app is built: screens and routing, services, every WASTL endpoint and what its fields mean, the extended-incident unlock flow, native plugins, known issues, maintenance notes. Start here. |
+| **[MODERNIZATION.md](MODERNIZATION.md)** | The 2026 Android modernization: cordova-android 15 / targetSdk 36, plugin replacements, the CORS fix, and the on-device verification results. |
+
+Two things worth knowing before reading the code:
+
+- **The district colour on the overview map counts dispatched fire brigades, not incidents.**
+  A red district means at least six brigades are out. See
+  [the data model section](ARCHITECTURE.md#das-datenmodell-und-seine-fallen).
+- **`www/lib/` and `www/css/` are generated** and not checked in. Without `npx gulp install` the
+  app starts with a blank screen.
+
 Contributing
 ------------
 
