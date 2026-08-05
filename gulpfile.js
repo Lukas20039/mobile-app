@@ -1,35 +1,48 @@
 var gulp = require('gulp');
-var gutil = require('gulp-util');
+var log = require('fancy-log');
+var colors = require('ansi-colors');
 var bower = require('bower');
-var sass = require('gulp-sass');
+var sass = require('gulp-sass')(require('sass'));
 var cleanCss = require('gulp-clean-css');
 var rename = require('gulp-rename');
 var sh = require('shelljs');
 var del = require('del');
 var jshint = require('gulp-jshint');
 
+// Plugins are resolved from npm. Versions are pinned so a fresh checkout builds
+// reproducibly; see MODERNIZATION.md for why the previous GitHub URLs are gone.
 var requiredCordovaPlugins = [
-    'cordova-plugin-whitelist@1.2.2',
-    'cordova-plugin-console@1.0.3',
-    'cordova-plugin-device@1.1.2',
-    'cordova-plugin-statusbar@2.1.3',
-    'cordova-plugin-splashscreen@3.2.2',
-    'cordova-plugin-geolocation@2.2.0',
-    'cordova-plugin-inappbrowser@1.4.0',
-    'cordova-plugin-android-permissions@0.10.0',
-    'https://github.com/VersoSolutions/CordovaClipboard', // only master available
-    'https://github.com/EddyVerbruggen/Toast-PhoneGap-Plugin.git#2.5.2',
-    'https://github.com/wymsee/cordova-HTTP.git#v1.2.0',
-    'https://github.com/robertklein/cordova-ios-security.git', // only master branch available
-    'https://github.com/gitawego/cordova-screenshot.git#v0.1.5'
+    'cordova-plugin-device@3.0.0',
+    'cordova-plugin-statusbar@4.0.0',
+    'cordova-plugin-geolocation@5.0.0',
+    'cordova-plugin-inappbrowser@6.0.0',
+    'cordova-plugin-android-permissions@1.1.5',
+    'cordova-clipboard@1.3.0',
+    'cordova-plugin-x-toast@2.7.3',
+    'cordova-plugin-advanced-http@3.3.1',
+    './local-plugins/cordova-plugin-grisu-screenshot'
 ];
+
+function processSass() {
+    return gulp.src('./scss/ionic.app.scss')
+        .pipe(sass().on('error', sass.logError))
+        .pipe(gulp.dest('./www/css/'))
+        .pipe(cleanCss({ keepSpecialComments: 0 }))
+        .pipe(rename({ extname: '.min.css' }))
+        .pipe(gulp.dest('./www/css/'));
+}
+
+function printErrorMessageAndExit(msg) {
+    log(colors.red(msg));
+    process.exit(1);
+}
 
 gulp.task('sass', function() {
     return processSass();
 });
 
 gulp.task('sass:watch', function() {
-    gulp.watch('./scss/ionic.app.scss', ['sass']);
+    return gulp.watch('./scss/ionic.app.scss', gulp.series('sass'));
 });
 
 gulp.task('lint', function() {
@@ -42,7 +55,7 @@ gulp.task('lint', function() {
 gulp.task('bower', function(done) {
     bower.commands.install()
         .on('log', function(data) {
-            gutil.log('bower', gutil.colors.cyan(data.id), data.message);
+            log('bower', colors.cyan(data.id), data.message);
         }).on('end', function() {
             done();
         }).on('error', function() {
@@ -53,7 +66,7 @@ gulp.task('bower', function(done) {
 gulp.task('cordova', function(done) {
     for (var i = 0; i < requiredCordovaPlugins.length; i++) {
         var plugin = requiredCordovaPlugins[i];
-        if (sh.exec('ionic plugin add --nosave ' + plugin).code !== 0) {
+        if (sh.exec('npx cordova plugin add ' + plugin).code !== 0) {
             printErrorMessageAndExit('Error: Couldn\'t install Cordova plugin ' + plugin);
         }
     }
@@ -71,32 +84,16 @@ gulp.task('git:check', function(done) {
     done();
 });
 
-gulp.task('install', ['git:check', 'cordova', 'bower'], function() {
-    // this is a hack for simulating a synchronous behavior
-    console.log("*** Compiling SASS ***");
-    processSass();
-});
-
-gulp.task('clean', function(done) {
-    del([
+gulp.task('clean', function() {
+    return del([
         'node_modules/**',
         'plugins/**',
         'platforms/**',
         'www/css/**',
         'www/lib/**'
-    ], done());
+    ]);
 });
 
-function printErrorMessageAndExit(msg) {
-    console.log(gutil.colors.red(msg));
-    process.exit(1);
-}
+gulp.task('install', gulp.series('git:check', 'cordova', 'bower', 'sass'));
 
-function processSass() {
-    return gulp.src('./scss/ionic.app.scss')
-        .pipe(sass().on('error', sass.logError))
-        .pipe(gulp.dest('./www/css/'))
-        .pipe(cleanCss({ keepSpecialComments: 0 }))
-        .pipe(rename({ extname: '.min.css' }))
-        .pipe(gulp.dest('./www/css/'));
-}
+gulp.task('default', gulp.series('sass'));
