@@ -1,5 +1,5 @@
 angular.module('grisu-noe').factory('geoService', function($http, $q, $window, $cordovaGeolocation) {
-    var geocodeAddr = 'https://maps.googleapis.com/maps/api/geocode/json';
+    var geocodeAddr = 'https://nominatim.openstreetmap.org/search';
     var wastlHydrantsAddr = 'https://secure.florian10.info/ows/infoscreen/geo/umkreis.ashx';
     var httpTimeout = 30000;
 
@@ -14,12 +14,35 @@ angular.module('grisu-noe').factory('geoService', function($http, $q, $window, $
 
             $http.get(geocodeAddr, {
                 timeout: httpTimeout,
+                headers: {
+                    'User-Agent': 'Grisu-NOE-Android/1.4.0 (private use)'
+                },
                 params: {
-                    address: address
+                    q: address,
+                    format: 'json',
+                    limit: 1
                 }
             }).success(function(data) {
-                console.info('Geocoding data loaded from Google server', data);
-                deferred.resolve(data);
+                console.info('Geocoding data loaded from OpenStreetMap Nominatim server', data);
+                /*
+                 * Nominatim returns [{lat, lon, ...}], while the callers expect the old
+                 * Google format {results:[{geometry:{location:{lat,lng}}}]}. Map it here
+                 * so the controllers stay untouched.
+                 */
+                if (data && data.length > 0) {
+                    deferred.resolve({
+                        results: [{
+                            geometry: {
+                                location: {
+                                    lat: parseFloat(data[0].lat),
+                                    lng: parseFloat(data[0].lon)
+                                }
+                            }
+                        }]
+                    });
+                } else {
+                    deferred.resolve({results: []});
+                }
             }).error(function(data, code) {
                 deferred.reject(code, data);
                 console.error('Error with geocoding', code, data);
