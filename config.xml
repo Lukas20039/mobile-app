@@ -5,7 +5,7 @@
         xmlns:android="http://schemas.android.com/apk/res/android">
     <name>Grisu</name>
     <description>A modern mobile app for firefighters in Lower Austria.</description>
-    <author email="alexander.gassner@feuerwehr.gv.at" href="https://github.com/Grisu-NOE/mobile-app">l-e-X</author>
+    <author email="lukas.grundtner@gmail.com" href="https://github.com/Lukas20039/mobile-app">Lukas Grundtner</author>
     <content src="index.html"/>
 	
     <access origin="*"/>

@@ -245,6 +245,17 @@ Der Ablauf:
 3. Ein Verantwortlicher für den Infoscreen der eigenen Feuerwehr schaltet den Code frei.
    Danach wechselt `CurrentState` auf `data`.
 
+Ein Request **ohne** dieses Cookie bekommt immer einen **neuen** Code — bei einer
+Neuinstallation wäre die Freischaltung damit verloren. Deshalb speichert `updateToken()` jeden
+vom Server gelieferten `Token` unter dem localStorage-Key **`infoscreenToken`**, und
+`getInfoScreenData` schickt ihn (nur im nativen Pfad, der Magic Cookie hat Vorrang) als
+expliziten `Cookie`-Header `xFFK_InfoScrCookie_TokenID` mit. Der Server erkennt die Session
+dann wieder und antwortet mit demselben Code. Weil localStorage eine Neuinstallation nicht
+überlebt, gibt es in den Einstellungen zusätzlich **„Code kopieren"** und
+**„Code wiederherstellen"**: ein manuell eingegebener Code wird gespeichert und sofort per
+`updateToken()` gegen den Server geprüft. Kennt der Server ihn nicht (Fehler `1002`,
+`CurrentState` = `error`), verwirft die App den gespeicherten Code wieder.
+
 Die Berechtigung liegt damit vollständig beim Server: `CurrentState` wird ausschließlich
 serverseitig bestimmt, die App wertet den Zustand nur aus. Ohne Freigabe durch die eigene
 Feuerwehr stehen die erweiterten Daten nicht zur Verfügung.

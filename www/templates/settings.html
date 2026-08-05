@@ -64,6 +64,20 @@
                 <h2 ng-if="!loadingTokenInfo && waitForToken" ng-click="copyTokenToClipboard()">Code: {{ token }}</h2>
                 <h2 ng-if="!loadingTokenInfo && !waitForToken">Erweiterte Einsatzdaten {{ homeAddress }} werden verwendet!</h2>
             </div>
+            <div class="item item-text-wrap" ng-if="!loadingTokenInfo && waitForToken">
+                <a class="button button-block button-positive" ng-click="copyTokenToClipboard()">Code kopieren</a>
+            </div>
+            <label class="item item-input">
+                <input type="text" placeholder="Code eingeben" ng-model="restoreTokenModel.code">
+            </label>
+            <div class="item item-text-wrap">
+                <a class="button button-block button-stable" ng-click="restoreToken()">Code wiederherstellen</a>
+                <p ng-if="tokenInfoMessage">{{ tokenInfoMessage }}</p>
+                <p class="text-stable">
+                    Code nach einer Neuinstallation über &bdquo;Code wiederherstellen&ldquo; wieder eingeben &ndash;
+                    die Freischaltung bleibt dann erhalten.
+                </p>
+            </div>
         </div>
         <div ng-show="settings.showExtendedIncidentData" class="padding-left padding-right">
             <p ng-if="!loadingTokenInfo && waitForToken">

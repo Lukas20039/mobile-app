@@ -197,6 +197,17 @@ angular.module('grisu-noe').controller('overviewTabController',
             if (data.CurrentState == 'token' || data.CurrentState == 'waiting') {
                 $scope.token = data.Token;
                 $scope.waitForToken = true;
+                storeToken(data.Token);
+            } else if (isUnknownTokenError(data) && getStoredToken() !== null) {
+                /*
+                 * Error 1002 means the server doesn't know the stored code - typically a typo
+                 * while restoring it. Discard it, otherwise every following request keeps
+                 * failing, and let the server issue a fresh one.
+                 */
+                storageService.setObject('infoscreenToken', {});
+                showTokenInfo('Der Code wurde vom Server nicht erkannt.');
+                updateToken();
+                return;
             } else {
                 $scope.waitForToken = false;
             }
@@ -205,14 +216,80 @@ angular.module('grisu-noe').controller('overviewTabController',
         });
     }
 
+    function isUnknownTokenError(data) {
+        if (data.CurrentState != 'error' || !angular.isArray(data.Errors)) {
+            return false;
+        }
+
+        for (var i = 0; i < data.Errors.length; i++) {
+            if (data.Errors[i].ErrorCode === 1002) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function getStoredToken() {
+        var stored = storageService.getObject('infoscreenToken');
+        return stored && stored.value ? stored.value : null;
+    }
+
+    /**
+     * The server issues a NEW code for every request that arrives without the
+     * xFFK_InfoScrCookie_TokenID cookie, so the code has to be kept on our side: dataService
+     * sends it back as that cookie, which keeps the unlocked code alive across reinstalls.
+     */
+    function storeToken(token) {
+        if (angular.isUndefinedOrNull(token) || token.toString().length === 0) {
+            return;
+        }
+
+        storageService.setObject('infoscreenToken', { value: token.toString() });
+    }
+
+    /**
+     * Toast is only available on a device. In the browser the message is shown inline in the
+     * settings dialog instead, so no code path depends on the plugin being present.
+     */
+    function showTokenInfo(message) {
+        $scope.tokenInfoMessage = message;
+
+        if ($window.cordova && $window.plugins && $window.plugins.toast) {
+            $cordovaToast.showShortBottom(message);
+        }
+    }
+
     $scope.copyTokenToClipboard = function() {
-        if (!$window.cordova) {
+        if (angular.isUndefinedOrNull($scope.token)) {
+            return;
+        }
+
+        if (!$window.cordova || !$window.cordova.plugins || !$window.cordova.plugins.clipboard) {
+            showTokenInfo('Zwischenablage steht hier nicht zur Verfügung. Code: ' + $scope.token);
             return;
         }
 
         $cordovaClipboard.copy($scope.token).then(function() {
-            $cordovaToast.showShortBottom('Code wurde in die Zwischenablage kopiert');
+            showTokenInfo('Code wurde in die Zwischenablage kopiert');
         });
+    };
+
+    $scope.restoreToken = function() {
+        var token = '';
+        if (!angular.isUndefinedOrNull($scope.restoreTokenModel) && !angular.isUndefinedOrNull($scope.restoreTokenModel.code)) {
+            token = $scope.restoreTokenModel.code.trim();
+        }
+
+        if (token.length === 0) {
+            showTokenInfo('Bitte zuerst einen Code eingeben.');
+            return;
+        }
+
+        storeToken(token);
+        $scope.restoreTokenModel.code = '';
+        showTokenInfo('Code wird wiederhergestellt...');
+        updateToken();
     };
 
     $scope.openAboutDialog = function() {
@@ -224,6 +301,11 @@ angular.module('grisu-noe').controller('overviewTabController',
     };
     
     $scope.openSettingsDialog = function() {
+        $scope.tokenInfoMessage = null;
+        // init on the controller scope, otherwise ng-model creates it on the modal's child scope
+        if (angular.isUndefinedOrNull($scope.restoreTokenModel)) {
+            $scope.restoreTokenModel = {};
+        }
         updateToken();
         $scope.settingsDialog.show();
     };

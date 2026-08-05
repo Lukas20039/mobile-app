@@ -13,3 +13,6 @@ www/css/*
 www/lib/*
 platforms/*
 plugins/*
+build.json
+*.keystore
+cdp_eval.js
