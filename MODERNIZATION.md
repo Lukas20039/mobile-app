@@ -220,6 +220,11 @@ Einsätze vorhanden." Measured against the live API:
   `f=14`, the list moments later contained four incidents that had started at 11:01, 11:34,
   12:25 and 14:16 — i.e. they were active the whole time. The colour was right; the empty list
   was the wrong information.
+- Quantified over 8 minutes, polling district 21 every 20 s: `f` stayed at 14 while the list
+  length went `0,0,0,0,0,0,0,0,4,4,0,0,0,0,0,1,1,1,1,1,1,1,5`. **In 14 of 25 polls (~56 %) the
+  endpoint reported zero incidents while at least four were demonstrably active**; it returned
+  the full set in only ~12 % of polls. When a new incident started at 15:41, `f` rose from 14 to
+  16 shortly after — so `f` tracks reality correctly and promptly.
 
 So this is an upstream defect, not an app bug. What the app *can* do is stop implying that the
 colour counts incidents, so a legend under the overview map now states that the colouring
