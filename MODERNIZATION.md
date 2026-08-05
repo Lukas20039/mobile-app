@@ -187,6 +187,48 @@ Not committed to the repo; created under `../toolchain/` with `../toolchain/env.
   `platform-tools`.
 - **Gradle 8.14.2** — cordova needs a system Gradle to bootstrap its wrapper.
 
+Data bugs found during device testing
+-------------------------------------
+
+Two findings that are unrelated to the Android migration but surfaced while testing on a
+device.
+
+### "Aktuelle Einsätze" always showed 0
+
+The overview summed the per-district field `e` from `getMainData.ashx`. That field is no longer
+populated by the WASTL API — it is `0` for every district — so the counter permanently read 0
+while the same payload reported 31 active incidents state-wide in `h1.s`.
+
+`processMainData` now prefers `h1.s` and only falls back to summing `e` if `h1` is absent.
+
+### Red district with an empty incident list
+
+A long-standing complaint: a district is coloured red, but tapping it shows "Zurzeit sind keine
+Einsätze vorhanden." Measured against the live API:
+
+- The colour is **not** an incident count. `getMainData.ashx` returns `z`, which is purely a
+  WASTL classification of `f`, the number of dispatched fire brigades:
+  `f=0` → grey, `1–2` → yellow, `3–5` → orange, `≥6` → red.
+- The list comes from a different endpoint, `getEinsatzAktiv.ashx?id=bezirk_XX`, and **that
+  endpoint intermittently returns an empty array for incidents that are demonstrably still
+  active**. Observed: lists for several *independent* districts flip between empty and populated
+  simultaneously in roughly 90-second blocks, while `f` stays constant. Within one such window
+  the response is perfectly stable (12 of 12 identical requests over 24 s on the same backend),
+  so it is a server-side refresh cycle, not per-request load balancing and not real incident
+  churn.
+- Confirmed by timestamps: during a window in which Wr. Neustadt's list came back empty at
+  `f=14`, the list moments later contained four incidents that had started at 11:01, 11:34,
+  12:25 and 14:16 — i.e. they were active the whole time. The colour was right; the empty list
+  was the wrong information.
+
+So this is an upstream defect, not an app bug. What the app *can* do is stop implying that the
+colour counts incidents, so a legend under the overview map now states that the colouring
+reflects dispatched fire brigades, with the thresholds above.
+
+A further mitigation is possible but not implemented: when `f > 0` and the list comes back
+empty, that combination is known to be a bad response, so the app could retry or keep the
+previous list instead of rendering "keine Einsätze vorhanden".
+
 Building
 --------
 

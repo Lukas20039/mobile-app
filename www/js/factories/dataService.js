@@ -48,9 +48,22 @@ angular.module('grisu-noe').factory('dataService', function($http, $q, $window, 
             mapColorStates: []
         };
 
+        /*
+         * The per-district incident count `e` is no longer populated by the WASTL API - it is
+         * 0 for every district, which made "Aktuelle Einsätze" permanently show 0. The
+         * state-wide total is still delivered in h1.s, so prefer that and only fall back to
+         * summing `e` if h1 is missing.
+         */
+        if (data.h1 && angular.isNumber(data.h1.s)) {
+            extension.incidentCount = data.h1.s;
+        }
+
         angular.forEach(data.Bezirke, function(district) {
             extension.departmentCount += district.f;
-            extension.incidentCount += district.e;
+
+            if (!(data.h1 && angular.isNumber(data.h1.s))) {
+                extension.incidentCount += district.e;
+            }
 
             // k = identifier of district, LWZ = 'Landeswarnzentrale', is not on map
             if (district.k === '') {

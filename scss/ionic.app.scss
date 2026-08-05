@@ -105,6 +105,48 @@ a.hyperlink {
     }
 }
 
+// Legend under the overview map. Reuses the warn colours so it cannot drift from the map.
+.map-legend {
+    padding: 4px 16px 16px;
+    color: $main-font-color;
+    font-size: 12px;
+
+    .map-legend-title {
+        margin-bottom: 6px;
+    }
+
+    .map-legend-item {
+        display: inline-block;
+        margin-right: 14px;
+        white-space: nowrap;
+
+        i {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin-right: 5px;
+            vertical-align: -1px;
+            border-radius: 2px;
+        }
+
+        i.none {
+            background-color: $map-bg-color;
+        }
+
+        i.low {
+            background-color: $low-warn-color;
+        }
+
+        i.medium {
+            background-color: $medium-warn-color;
+        }
+
+        i.high {
+            background-color: $high-warn-color;
+        }
+    }
+}
+
 .list {
     .item-dark {
         background-color: $main-bg-color;
