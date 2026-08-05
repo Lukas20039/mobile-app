@@ -3,6 +3,24 @@ Grisu NÖ - Mobile App [![MIT License][license-image]][license-url] [![Build Sta
 
 [![Apple App Store][app-store-image]][app-store-url] [![Google Play Store][play-store-image]][play-store-url]
 
+> ### Hinweis zu diesem Fork
+>
+> Dies ist ein **privater Fork** von [Grisu-NOE/mobile-app](https://github.com/Grisu-NOE/mobile-app)
+> (MIT-Lizenz). Einziger Zweck: die App auf aktuellen Android-Versionen (14/15/16) baubar und
+> lauffähig machen — Details in [MODERNIZATION.md](MODERNIZATION.md).
+>
+> - **Privates Hobbyprojekt.** Steht in keinem Zusammenhang mit dem Originalprojekt, mit WASTL
+>   oder mit einer Feuerwehr oder Behörde.
+> - **Wird nicht angeboten.** Dieser Fork ist in keinem App Store veröffentlicht und enthält keine
+>   Binärdateien. Die Store-Badges oben führen zu den **offiziellen Veröffentlichungen des
+>   Originalprojekts** — wer die App nutzen möchte, sollte diese verwenden.
+> - **Nur Debug-Builds.** Was aus diesem Branch gebaut wird, ist mit dem öffentlich bekannten
+>   Android-Debug-Schlüssel signiert; die Herkunft ist damit technisch nicht überprüfbar. Gedacht
+>   für eigene Tests, nicht zur Weitergabe.
+> - **Die Daten gehören nicht mir.** Die Einsatzdaten stammen von den unten genannten
+>   WASTL-Betreibern. Wie im Original gilt: keine Gewähr auf Richtigkeit und Vollständigkeit — und
+>   **Positionsangaben sind auf keinen Fall für einen tatsächlichen Einsatz zu verwenden.**
+
 The already existing mobile web-app (http://mobile.leitstelle122.at/) of WASTL - shortened for "<strong>Wa</strong>rn- und
 Alarm<strong>st</strong>ufen<strong>l</strong>iste" in German - is used to display several realtime information of currently running fire
 brigade incidents in Lower Austria. The incident data is kindly provided by the voluntary fire department "Freiwillige Feuerwehr Krems".
