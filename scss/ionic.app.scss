@@ -322,9 +322,19 @@ span.no-alarm-image {
         height: 100%;
     }
 
-    // don't display a link to OSM or other layers
+    /*
+        Attribution must stay visible: OpenStreetMap requires it under the ODbL and
+        basemap.at is CC BY 4.0. It used to be hidden with display:none, which is a licence
+        violation. Kept compact so it does not eat into the map on a phone.
+    */
     .leaflet-control-attribution {
-        display: none;
+        font-size: 9px;
+        padding: 1px 4px;
+        background: rgba(255, 255, 255, 0.75);
+
+        a {
+            color: #0645ad;
+        }
     }
 }
 

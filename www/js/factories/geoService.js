@@ -3,6 +3,11 @@ angular.module('grisu-noe').factory('geoService', function($http, $q, $window, $
     var wastlHydrantsAddr = 'https://secure.florian10.info/ows/infoscreen/geo/umkreis.ashx';
     var httpTimeout = 30000;
 
+    // Required attribution for the tile sources. basemap.at is CC BY 4.0, OpenStreetMap ODbL.
+    var BASEMAP_ATTRIBUTION = 'Datenquelle: <a href="https://www.basemap.at">basemap.at</a>';
+    var OSM_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende';
+    var OFM_ATTRIBUTION = '&copy; <a href="https://www.openfiremap.org">OpenFireMap</a>';
+
     return {
         geocodeAddress: function(address) {
             var deferred = $q.defer();
@@ -81,33 +86,60 @@ angular.module('grisu-noe').factory('geoService', function($http, $q, $window, $
 
             return {
                 baselayers: {
-                    // All tile endpoints are HTTPS: Android 9+ blocks cleartext traffic by
-                    // default, so the previous http:// URLs failed silently on modern devices.
+                    /*
+                     * All tile endpoints are HTTPS: Android 9+ blocks cleartext traffic by
+                     * default, so the previous http:// URLs failed silently on modern devices.
+                     *
+                     * Every layer carries an `attribution`. That is not cosmetic - OpenStreetMap
+                     * requires attribution under the ODbL and basemap.at is licensed CC BY 4.0.
+                     * The stylesheet used to hide the attribution control entirely.
+                     */
                     basemap: {
                         name: 'basemap.at',
                         type: 'xyz',
                         // The maps1..maps4 shards no longer resolve; only maps.wien.gv.at is left.
-                        url: 'https://maps.wien.gv.at/basemap/bmaphidpi/normal/google3857/{z}/{y}/{x}.jpeg'
+                        url: 'https://maps.wien.gv.at/basemap/bmaphidpi/normal/google3857/{z}/{y}/{x}.jpeg',
+                        layerOptions: {
+                            attribution: BASEMAP_ATTRIBUTION,
+                            maxZoom: 19
+                        }
                     },
                     osm: {
                         name: 'OpenStreetMap',
                         type: 'xyz',
-                        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+                        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        layerOptions: {
+                            attribution: OSM_ATTRIBUTION,
+                            maxZoom: 19
+                        }
                     },
-                    hybrid: {
+                    /*
+                     * Satellite and terrain used to come from mt0-3.google.com/vt, an internal
+                     * Google endpoint rather than the licensed Maps API - using it breaks the
+                     * Google Maps Terms of Service. Replaced by basemap.at's orthophoto and
+                     * terrain layers: official Austrian data under CC BY 4.0, and better suited
+                     * to this app's area anyway.
+                     *
+                     * The orthophoto carries no place labels, unlike the previous Google hybrid
+                     * layer. basemap.at offers a labels-only overlay (bmapoverlay) should that
+                     * ever be wanted.
+                     */
+                    orthophoto: {
                         name: 'Satellit',
                         type: 'xyz',
-                        url: 'https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',
+                        url: 'https://maps.wien.gv.at/basemap/bmaporthofoto30cm/normal/google3857/{z}/{y}/{x}.jpeg',
                         layerOptions: {
-                            subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+                            attribution: BASEMAP_ATTRIBUTION,
+                            maxZoom: 19
                         }
                     },
                     terrain: {
                         name: 'Gel&auml;nde',
                         type: 'xyz',
-                        url: 'https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
+                        url: 'https://maps.wien.gv.at/basemap/bmapgelaende/grau/google3857/{z}/{y}/{x}.jpeg',
                         layerOptions: {
-                            subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+                            attribution: BASEMAP_ATTRIBUTION,
+                            maxZoom: 19
                         }
                     }
                 },
@@ -118,7 +150,10 @@ angular.module('grisu-noe').factory('geoService', function($http, $q, $window, $
                         visible: overlaysActive,
                         // NOTE: openfiremap.org/hytiles currently answers 404 for every tile -
                         // the upstream service is down. Leaflet degrades to an empty overlay.
-                        url: 'https://openfiremap.org/hytiles/{z}/{x}/{y}.png'
+                        url: 'https://openfiremap.org/hytiles/{z}/{x}/{y}.png',
+                        layerOptions: {
+                            attribution: OFM_ATTRIBUTION
+                        }
                     }
                 }
             };

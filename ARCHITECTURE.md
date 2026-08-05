@@ -165,8 +165,28 @@ Ausnahme.
 | Wasserentnahmestellen | `secure.florian10.info/ows/infoscreen/geo/umkreis.ashx` |
 | Geokodierung | `maps.googleapis.com/maps/api/geocode/json` ⚠️ *siehe Bekannte Probleme* |
 
-Kartenlayer: basemap.at (`maps.wien.gv.at`), OpenStreetMap, Google Satellit/Gelände,
-OpenFireMap-Hydranten-Overlay ⚠️.
+Kartenlayer, alle mit gesetzter `attribution`:
+
+| Layer | Quelle | Lizenz |
+|---|---|---|
+| basemap.at | `maps.wien.gv.at/basemap/bmaphidpi` | CC BY 4.0 |
+| OpenStreetMap | `tile.openstreetmap.org` | ODbL |
+| Satellit | `maps.wien.gv.at/basemap/bmaporthofoto30cm` | CC BY 4.0 |
+| Gelände | `maps.wien.gv.at/basemap/bmapgelaende` | CC BY 4.0 |
+| OpenFireMap ⚠️ | `openfiremap.org/hytiles` | ODbL |
+
+Satellit und Gelände kamen ursprünglich von `mt0-3.google.com/vt` — einem **internen**
+Google-Endpunkt, nicht der lizenzierten Maps-API, dessen Nutzung gegen die Google Maps Terms of
+Service verstößt. Ersetzt durch die Orthofoto- und Geländelayer von basemap.at: offizielle
+österreichische Daten, für das Einsatzgebiet dieser App ohnehin passender. Das Orthofoto hat
+keine Ortsbeschriftungen; basemap.at bietet dafür einen reinen Label-Layer (`bmapoverlay`), falls
+das gewünscht wird.
+
+> [!] **Die Attribution muss sichtbar bleiben.** OpenStreetMap verlangt sie unter der ODbL,
+> basemap.at ist CC BY 4.0. Ursprünglich hat das Stylesheet
+> `.leaflet-control-attribution { display: none; }` gesetzt und damit gegen beide Lizenzen
+> verstoßen. Jetzt tragen alle Layer eine `attribution`, und das Control wird nur noch kompakt
+> gestylt. Nicht wieder ausblenden.
 
 Die BAZ-Info kommt als **XML**. Umgewandelt wird sie nicht im `dataService`, sondern global vom
 `xmlHttpInterceptor` aus `angular-xml`, der in `app.js` registriert ist und jede Antwort mit
@@ -262,7 +282,9 @@ maßgeblich, nicht die READMEs.
 Bekannte Probleme
 -----------------
 
-Drei davon liegen außerhalb der App und lassen sich hier nicht beheben.
+Zwei davon liegen außerhalb der App und lassen sich hier nicht beheben. Die früheren
+Lizenzprobleme — ausgeblendete Karten-Attribution und Google-Tiles vom internen Endpunkt — sind
+behoben, siehe [Datenquellen](#datenquellen).
 
 ### Einsatzliste kommt phasenweise leer zurück *(Upstream)*
 

@@ -151,9 +151,24 @@ HTTPS, so the app needs **no** cleartext exemption:
 | `infoscreen.florian10.info` (main data) | already HTTPS, unchanged |
 | `atlas.feuerwehr-krems.at` (BAZ info) | http → **https**; the plain-HTTP port no longer accepts connections at all |
 | `tile.openstreetmap.org` | http → **https** |
-| `mt0-3.google.com` (satellite / terrain) | http → **https** |
+| `mt0-3.google.com` (satellite / terrain) | http → https, then **removed entirely** — see below |
 | `maps.wien.gv.at` (basemap.at) | http → **https**, and the `{s}` subdomain sharding was removed because `maps1`–`maps4` no longer resolve (only `maps.wien.gv.at` does) |
 | `openfiremap.org/hytiles` (hydrant overlay) | http → **https** |
+
+### Tile licensing
+
+Two licence problems inherited from the original were fixed:
+
+- The stylesheet hid the Leaflet attribution control outright
+  (`.leaflet-control-attribution { display: none; }`), and no layer set an `attribution` option.
+  OpenStreetMap requires attribution under the ODbL and basemap.at is CC BY 4.0, so this was a
+  violation of both. Every layer now carries an `attribution` and the control is merely styled
+  compactly.
+- Satellite and terrain were served from `mt0-3.google.com/vt`, an **internal** Google endpoint
+  rather than the licensed Maps API — using it breaks the Google Maps Terms of Service. Both are
+  now basemap.at layers (`bmaporthofoto30cm` and `bmapgelaende`): official Austrian data under
+  CC BY 4.0 and a better fit for this app's coverage area. The orthophoto has no place labels,
+  unlike the former Google hybrid layer.
 
 **Known upstream breakage:** the OpenFireMap hydrant tile service answers `404` with an HTML
 error body for every tile, over both HTTP and HTTPS. This is a dead upstream service, not a
