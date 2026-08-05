@@ -225,15 +225,17 @@ Der Ablauf:
 3. Ein Verantwortlicher für den Infoscreen der eigenen Feuerwehr schaltet den Code frei.
    Danach wechselt `CurrentState` auf `data`.
 
-Es gibt **keinen** Weg, das clientseitig zu umgehen — `CurrentState` kommt vollständig vom
-Server, und im Code existiert keine Stelle, die den Zustand überschreiben könnte.
+Die Berechtigung liegt damit vollständig beim Server: `CurrentState` wird ausschließlich
+serverseitig bestimmt, die App wertet den Zustand nur aus. Ohne Freigabe durch die eigene
+Feuerwehr stehen die erweiterten Daten nicht zur Verfügung.
 
-**Magic Cookie** ist der zweite, versteckte Pfad: ein Popover, in das eine bereits bestehende
-`xFFK_InfoScrCookie_SessionID` eingetragen und aktiviert werden kann. Ist das gesetzt, schickt
-`getInfoScreenData` sie als manuellen `Cookie`-Header über den nativen HTTP-Stack — deshalb muss
-der Header-Merge des HTTP-Plugins explizit gesetzte Header bevorzugen. Erreichbar ist das
-Popover derzeit nur über ein **Easter Egg: elfmal auf das Info-Feld tippen**
-(`onEasterEggClicked`, `easterEggClickCount > 10`).
+**Magic Cookie** ist ein Konfigurationsfeld aus der Frühzeit des Projekts: ein verstecktes
+Popover, in dem eine Infoscreen-Session manuell hinterlegt werden kann. Ist es gesetzt, sendet
+`getInfoScreenData` diese Session als expliziten `Cookie`-Header über den nativen HTTP-Stack
+(siehe `dataService.getInfoScreenData`). Für die Wartung ist daran vor allem eines relevant:
+**deshalb muss der Header-Merge des HTTP-Plugins explizit gesetzte Header bevorzugen** — sonst
+bricht dieser Pfad. Das Popover ist bewusst nicht in der normalen Oberfläche verlinkt, sondern nur
+über ein Easter Egg erreichbar (`onEasterEggClicked`, `easterEggClickCount > 10`).
 
 Native Plugins
 --------------
