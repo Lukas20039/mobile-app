@@ -102,6 +102,44 @@ header bars under the status bar. Rather than rewriting the Ionic 1 layout with
 `viewport-fit=cover` was still added to the viewport meta tag so that
 `env(safe-area-inset-*)` reports real values if anyone flips `AndroidEdgeToEdge` on later.
 
+CORS: the one that only showed up on the device
+-----------------------------------------------
+
+This was the blocker that no amount of static checking would have caught, and it broke *all*
+data loading.
+
+cordova-android >= 10 no longer serves the app from `file://`. It uses a `WebViewAssetLoader`
+under the origin `https://localhost`. Every request to the WASTL API is therefore a genuine
+cross-origin XHR, and since those endpoints send no `Access-Control-Allow-Origin` header the
+WebView blocks every one of them:
+
+```
+Access to XMLHttpRequest at 'https://infoscreen.florian10.info/OWS/wastlMobile/getMainData.ashx'
+from origin 'https://localhost' has been blocked by CORS policy
+```
+
+Under the old `file://` origin CORS was not enforced, which is why the app worked before.
+
+The fix is `www/js/services/nativeHttpBackend.js`: an `$httpBackend` decorator that routes
+requests through `cordova-plugin-advanced-http`. The native HTTP stack is not subject to CORS,
+so this restores the data flow without touching a single call site.
+
+It deliberately delegates **only** absolute `http(s)` URLs pointing somewhere other than the
+app's own origin. Same-origin requests — above all AngularJS `templateUrl` loads — must stay on
+the normal XHR backend, because they are served by the asset loader and are not reachable over
+a real socket. Routing those natively would break every view.
+
+Two details that matter:
+
+- the `$httpBackend` signature is `(method, url, post, callback, headers, timeout, ...)` —
+  `callback` comes *before* `headers`;
+- the POST in `dataService.postVoting` builds its own urlencoded body, so the request uses
+  advanced-http's `utf8` serializer to pass the string through verbatim instead of
+  re-serializing it.
+
+Because the native bridge callback runs outside Angular's digest, the decorator triggers
+`$rootScope.$apply()` after completing a request.
+
 Network / HTTPS
 ---------------
 
@@ -181,7 +219,33 @@ Verification performed
 - All 35 assets referenced by `index.html`, plus every `templateUrl` in `app.js`, are present
   under `assets/www/` in the APK.
 
-**Not verified:** the app has not been launched on a device or emulator. No Android device
-was attached and no emulator system image is installed, so runtime behaviour — the Ionic 1
-UI under native inset handling, the screenshot capture path, and live data loading — is
-unverified. A smoke test on a real Android 14/15/16 device is the remaining step.
+### On-device verification
+
+Smoke-tested on a **OnePlus CPH2653, Android 16 (API 36)** — the same API level as `targetSdk`.
+Interactive steps were driven over the Chrome DevTools Protocol
+(`adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>`) rather than by tapping
+coordinates, so each result is reproducible.
+
+- App installs and launches, no crash; `Apache Cordova native platform version 15.1.0 is
+  starting`, WebView 150.0.7871.181.
+- **Live data loads:** `Main data loaded from server`, overview shows real counters
+  (`Ausgerückte Feuerwehren: 53`, `Aktive Bezirke: 11`) and the Lower Austria SVG map colours
+  its districts by live warn state.
+- **Insets are correct** on a real device: status bar tinted `#CD0200`, web content starts
+  below it, gesture bar area respected. This validates the `AndroidEdgeToEdge=false` approach —
+  no safe-area CSS was needed.
+- **All plugin globals resolve at runtime:** `navigator.screenshot`, `cordova.plugin.http`,
+  `cordova.plugins.clipboard`, `window.plugins.toast`, `window.StatusBar`, `device` →
+  `Android 16`.
+- **Map tiles:** of 16 tiles on the water tab, the 8 from `maps.wien.gv.at` all loaded and the
+  8 from `openfiremap.org` all failed — confirming both the HTTPS/subdomain fix and the dead
+  upstream overlay.
+- **Screenshot plugin works end to end** with no storage permission granted: returned
+  `Pictures/Grisu/<name>.jpg`, the file exists (1.06 MB JPEG), is registered in MediaStore
+  (`relative_path=Pictures/Grisu/`, so it appears in the gallery), and the pulled image shows
+  real captured content — i.e. PixelCopy did not return a blank frame.
+- **Geolocation, hydrant markers and the Leaflet map** all render correctly on the water tab.
+
+**Still unverified:** the clipboard/toast paths (`$cordovaClipboard`, `$cordovaToast`), the
+`postVoting` POST — which needs an unlocked WASTL infoscreen code — and the InAppBrowser
+external-link handling. iOS was not touched at all.
