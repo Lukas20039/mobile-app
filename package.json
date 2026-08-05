@@ -2,6 +2,7 @@
   "name": "grisu-noe",
   "version": "1.4.0",
   "description": "A modern mobile app for firefighters in Lower Austria.",
+  "author": "Lukas Grundtner",
   "license": "MIT",
   "scripts": {
     "install:deps": "gulp install",

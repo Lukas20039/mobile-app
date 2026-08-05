@@ -96,6 +96,40 @@ angular.module('grisu-noe').factory('dataService', function($http, $q, $window, 
         return result;
     };
 
+    /**
+     * Loads info screen data through the native HTTP stack with an explicit Cookie header.
+     * The WASTL server only recognizes an existing Infoscreen session if that cookie is sent
+     * verbatim, which the WebView's $http can't do.
+     *
+     * The cookie jar of advanced-http keeps the xFFK_InfoScrCookie_TokenID that previous
+     * responses set via Set-Cookie. That jar cookie would be merged with the explicit
+     * Cookie header below and WIN over it, so the server would keep answering with the OLD
+     * token. The jar cookies for this URL are therefore removed first (callback avoids a
+     * race with the follow-up request).
+     */
+    var getInfoScreenDataWithCookie = function(url, params, cookie, deferred) {
+        var http = $window.cordova && $window.cordova.plugin && $window.cordova.plugin.http;
+
+        var performRequest = function() {
+            cordovaHTTP.get(url, params || {}, {
+                Cookie: cookie
+            }).then(function(response) {
+                var json = angular.fromJson(response.data);
+                console.info('Cordova HTTP plugin: Extended info screen data loaded from server', json);
+                deferred.resolve(json);
+            }, function(response) {
+                console.error('Cordova HTTP plugin error: ' + response.status + ', ' + response.error);
+                deferred.reject(response.status, response.error);
+            });
+        };
+
+        if (http && http.removeCookies) {
+            http.removeCookies(url, performRequest);
+        } else {
+            performRequest();
+        }
+    };
+
     var createCurrentTimestamp = function() {
         return parseInt(Date.now() / 1000);
     };
@@ -187,6 +221,7 @@ angular.module('grisu-noe').factory('dataService', function($http, $q, $window, 
         getInfoScreenData: function(useDemoData) {
             var deferred = $q.defer();
             var magicCookie = storageService.getObject('magicCookie');
+            var infoScreenToken = storageService.getObject('infoscreenToken');
             var url = config.infoScreenBaseUrl;
             var options = {
                 timeout: config.httpTimeout
@@ -204,16 +239,14 @@ angular.module('grisu-noe').factory('dataService', function($http, $q, $window, 
             }
 
             if ($window.cordova && magicCookie && magicCookie.value.length > 0 && magicCookie.active) {
-                cordovaHTTP.get(url, options.params || {}, {
-                    Cookie: 'xFFK_InfoScrCookie_SessionID=' + magicCookie.value
-                }).then(function(response) {
-                    var json = angular.fromJson(response.data);
-                    console.info('Cordova HTTP plugin: Extended info screen data loaded from server', json);
-                    deferred.resolve(json);
-                }, function(response) {
-                    console.error('Cordova HTTP plugin error: ' + response.status + ', ' + response.error);
-                    deferred.reject(response.status, response.error);
-                });
+                getInfoScreenDataWithCookie(url, options.params, 'xFFK_InfoScrCookie_SessionID=' + magicCookie.value, deferred);
+            } else if ($window.cordova && infoScreenToken && infoScreenToken.value && infoScreenToken.value.length > 0) {
+                /*
+                 * Without this cookie the server hands out a BRAND NEW token on every request,
+                 * so a reinstalled app would lose its unlocked code. Sending the stored token
+                 * back makes the server recognize the old session and keep the same code.
+                 */
+                getInfoScreenDataWithCookie(url, options.params, 'xFFK_InfoScrCookie_TokenID=' + infoScreenToken.value, deferred);
             } else {
                 $http.get(url, options).success(function(data) {
                     console.info('Extended info screen data loaded from server', data);
