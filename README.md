@@ -29,16 +29,28 @@ You want to contribute? Great! Thanks for being awesome! Please see the project 
 
 ### Setup of development environment
 
-- Install [node.js](http://nodejs.org/) (v4.x)
-- `npm install -g cordova ionic gulp`
-- Optional: Install bower command line utility: `npm install -g bower`
+See [MODERNIZATION.md](MODERNIZATION.md) for the 2026 Android modernization (cordova-android 15,
+targetSdk 36) and the reasoning behind the plugin changes.
+
+Prerequisites for an Android build:
+
+- [node.js](https://nodejs.org/) 20 or newer
+- **JDK 21** (cordova-android 15 requires it and rejects newer JDKs)
+- Android SDK: `platforms;android-36`, `build-tools;36.0.0`, `platform-tools`
+- **Gradle 8.14.2+** on the `PATH` (Cordova needs it to bootstrap its own wrapper)
+
+Then:
+
 - Go to project root folder
-- Install required node dependencies: `npm install`
-- Run Gulp dependency installation: `gulp install`
-  - If you have problems to execute the Gulp task, try to execute `git config url."https://".insteadOf git://` before
+- Install node dependencies: `npm install`
+- Install web and Cordova dependencies: `npx gulp install`
+  - If bower fails on `git://` URLs, scope the rewrite to that process rather than editing your
+    global git config:
+    `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0="url.https://.insteadOf" GIT_CONFIG_VALUE_0="git://" npx bower install`
 - Add platforms
-  - `ionic platform --noresources --nosave add ios` (works only on Mac OSX)
-  - `ionic platform --noresources --nosave add android` (you need to install the [Android SDK](https://developer.android.com/sdk/) before)
+  - `npx cordova platform add ios` (works only on macOS; the iOS side has **not** been modernized)
+  - `npx cordova platform add android`
+- Build: `npx cordova build android --debug`
 - ENJOY!
 
 ### Useful commands and hints
