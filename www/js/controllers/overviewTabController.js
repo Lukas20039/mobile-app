@@ -55,13 +55,22 @@ angular.module('grisu-noe').controller('overviewTabController',
         $scope.infoMessages = messages;
     }
 
+    /**
+     * cordova-android >= 13 implements the Android 12+ SplashScreen API natively and
+     * dismisses the splash itself, so navigator.splashscreen (and with it
+     * $cordovaSplashscreen) only exists if the deprecated cordova-plugin-splashscreen
+     * is installed - which it no longer is. Guard instead of removing the call, so a
+     * future iOS build that still ships the plugin keeps working.
+     */
     function hideSplashscreen() {
-        if ($window.cordova) {
-            setTimeout(function() {
-                console.debug('hide splash screen');
-                $cordovaSplashscreen.hide();
-            }, 300);
+        if (!$window.cordova || !$window.navigator.splashscreen) {
+            return;
         }
+
+        setTimeout(function() {
+            console.debug('hide splash screen');
+            $cordovaSplashscreen.hide();
+        }, 300);
     }
 
     $scope.$on('cordova.resume', function() {

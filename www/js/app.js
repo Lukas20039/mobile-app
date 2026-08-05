@@ -188,13 +188,14 @@ angular.module('grisu-noe',
             var version = parseFloat($cordovaDevice.getVersion().substr(0, 3));
             console.debug('Android version: ' + version);
 
-            if (version < 4.4) {
-                // disable map if < 4.4 KitKat (SVG support)
-                $rootScope.showMap = false;
-            }
-
-            if (version >= 6.0) {
-                // ask the user if he want's to enable storage (for Screenshots)
+            /*
+             * Storage permission for screenshots is only meaningful on Android 6..9.
+             * From Android 10 (scoped storage) WRITE_EXTERNAL_STORAGE has no effect, and on
+             * Android 13+ the permission does not exist at all - requesting it there returns
+             * a permanent denial and would show a pointless prompt. The screenshot plugin
+             * writes through MediaStore on API 29+, which needs no permission.
+             */
+            if (version >= 6.0 && version < 10.0) {
                 var permissions = $window.cordova.plugins.permissions;
 
                 permissions.hasPermission(permissions.WRITE_EXTERNAL_STORAGE, function(status) {

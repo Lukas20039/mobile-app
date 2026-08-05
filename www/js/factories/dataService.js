@@ -28,7 +28,9 @@ angular.module('grisu-noe').factory('dataService', function($http, $q, $window, 
         warnStates: ['none', 'low', 'medium', 'high'],
         infoScreenBaseUrl: 'https://infoscreen.florian10.info/OWS/Infoscreen/',
         wastlMobileBaseUrl: 'https://infoscreen.florian10.info/OWS/wastlMobile/',
-        bazInfoUrl: 'http://atlas.feuerwehr-krems.at/CodePages/Wastl/GetDaten/GetWastlMainS3.asp?Time',
+        // HTTPS is mandatory here: the plain http:// endpoint no longer accepts connections
+        // and Android 9+ would block it anyway.
+        bazInfoUrl: 'https://atlas.feuerwehr-krems.at/CodePages/Wastl/GetDaten/GetWastlMainS3.asp?Time',
         httpTimeout: 60000 // 60 seconds maximum request time
     };
 

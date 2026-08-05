@@ -81,23 +81,23 @@ angular.module('grisu-noe').factory('geoService', function($http, $q, $window, $
 
             return {
                 baselayers: {
+                    // All tile endpoints are HTTPS: Android 9+ blocks cleartext traffic by
+                    // default, so the previous http:// URLs failed silently on modern devices.
                     basemap: {
                         name: 'basemap.at',
                         type: 'xyz',
-                        url: 'http://maps{s}.wien.gv.at/basemap/bmaphidpi/normal/google3857/{z}/{y}/{x}.jpeg',
-                        layerOptions: {
-                            subdomains: ['', '1', '2', '3', '4']
-                        }
+                        // The maps1..maps4 shards no longer resolve; only maps.wien.gv.at is left.
+                        url: 'https://maps.wien.gv.at/basemap/bmaphidpi/normal/google3857/{z}/{y}/{x}.jpeg'
                     },
                     osm: {
                         name: 'OpenStreetMap',
                         type: 'xyz',
-                        url: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+                        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
                     },
                     hybrid: {
                         name: 'Satellit',
                         type: 'xyz',
-                        url: 'http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',
+                        url: 'https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',
                         layerOptions: {
                             subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
                         }
@@ -105,7 +105,7 @@ angular.module('grisu-noe').factory('geoService', function($http, $q, $window, $
                     terrain: {
                         name: 'Gel&auml;nde',
                         type: 'xyz',
-                        url: 'http://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
+                        url: 'https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
                         layerOptions: {
                             subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
                         }
@@ -116,7 +116,9 @@ angular.module('grisu-noe').factory('geoService', function($http, $q, $window, $
                         name: 'OpenFireMap',
                         type: 'xyz',
                         visible: overlaysActive,
-                        url: 'http://openfiremap.org/hytiles/{z}/{x}/{y}.png'
+                        // NOTE: openfiremap.org/hytiles currently answers 404 for every tile -
+                        // the upstream service is down. Leaflet degrades to an empty overlay.
+                        url: 'https://openfiremap.org/hytiles/{z}/{x}/{y}.png'
                     }
                 }
             };
