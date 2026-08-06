@@ -200,13 +200,19 @@ angular.module('grisu-noe').controller('overviewTabController',
                 storeToken(data.Token);
             } else if (isUnknownTokenError(data) && getStoredToken() !== null) {
                 /*
-                 * Error 1002 means the server doesn't know the stored code - typically a typo
-                 * while restoring it. Discard it, otherwise every following request keeps
-                 * failing, and let the server issue a fresh one.
+                 * Error 1002 means the server no longer knows the stored code (revoked,
+                 * expired or a typo while restoring). Keep the old code instead of
+                 * silently generating a new one: roll back to the previous token if a
+                 * restore attempt overwrote it, show the error and let the user
+                 * explicitly request a fresh code via generateNewCode().
                  */
-                storageService.setObject('infoscreenToken', {});
+                $scope.codeRejected = true;
+                if (!angular.isUndefinedOrNull($scope.previousToken) && $scope.previousToken.length > 0) {
+                    storageService.setObject('infoscreenToken', { value: $scope.previousToken });
+                }
+                $scope.token = getStoredToken();
                 showTokenInfo('Der Code wurde vom Server nicht erkannt.');
-                updateToken();
+                $scope.loadingTokenInfo = false;
                 return;
             } else {
                 $scope.waitForToken = false;
@@ -286,9 +292,23 @@ angular.module('grisu-noe').controller('overviewTabController',
             return;
         }
 
+        // remember the current code so a rejected restore attempt can roll back
+        var current = getStoredToken();
+        if (!angular.isUndefinedOrNull(current) && current.length > 0) {
+            $scope.previousToken = current;
+        }
+
         storeToken(token);
         $scope.restoreTokenModel.code = '';
         showTokenInfo('Code wird wiederhergestellt...');
+        updateToken();
+    };
+
+    $scope.generateNewCode = function() {
+        $scope.codeRejected = false;
+        $scope.previousToken = null;
+        storageService.setObject('infoscreenToken', {});
+        showTokenInfo('Neuer Code wird erstellt...');
         updateToken();
     };
 
@@ -306,6 +326,7 @@ angular.module('grisu-noe').controller('overviewTabController',
         if (angular.isUndefinedOrNull($scope.restoreTokenModel)) {
             $scope.restoreTokenModel = {};
         }
+        $scope.codeRejected = false;
         updateToken();
         $scope.settingsDialog.show();
     };

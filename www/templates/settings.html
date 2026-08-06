@@ -78,6 +78,13 @@
                     die Freischaltung bleibt dann erhalten.
                 </p>
             </div>
+            <div class="item item-text-wrap" ng-if="codeRejected">
+                <p class="text-assertive">
+                    Der bisherige Code wurde vom Server nicht mehr erkannt. Er bleibt gespeichert &ndash;
+                    wenn du ihn erneut freischalten lassen willst, erstelle einen neuen Code.
+                </p>
+                <a class="button button-block button-assertive" ng-click="generateNewCode()">Neuen Code erstellen</a>
+            </div>
         </div>
         <div ng-show="settings.showExtendedIncidentData" class="padding-left padding-right">
             <p ng-if="!loadingTokenInfo && waitForToken">

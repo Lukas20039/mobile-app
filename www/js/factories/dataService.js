@@ -238,7 +238,7 @@ angular.module('grisu-noe').factory('dataService', function($http, $q, $window, 
                 url += 'Einsatz.ashx';
             }
 
-            if ($window.cordova && magicCookie && magicCookie.value.length > 0 && magicCookie.active) {
+            if ($window.cordova && magicCookie && magicCookie.value && magicCookie.value.length > 0 && magicCookie.active) {
                 getInfoScreenDataWithCookie(url, options.params, 'xFFK_InfoScrCookie_SessionID=' + magicCookie.value, deferred);
             } else if ($window.cordova && infoScreenToken && infoScreenToken.value && infoScreenToken.value.length > 0) {
                 /*
